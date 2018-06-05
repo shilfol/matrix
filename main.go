@@ -86,6 +86,9 @@ func (cm *calcMatrix) SolveMatrix() {
 
 func (cm *calcMatrix) solveForward() {
 	for i := 0; i < cm.size-1; i++ {
+		if cm.matrix[i][i] == 0.0 {
+			continue
+		}
 		for j := i + 1; j < cm.size; j++ {
 			q := cm.matrix[j][i] / cm.matrix[i][i]
 			for k := i; k < cm.size; k++ {
@@ -99,6 +102,9 @@ func (cm *calcMatrix) solveForward() {
 
 func (cm *calcMatrix) solveBackward() {
 	for i := cm.size - 1; i > 0; i-- {
+		if cm.matrix[i][i] == 0.0 {
+			continue
+		}
 		for j := 0; j < i; j++ {
 			q := cm.matrix[j][i] / cm.matrix[i][i]
 			cm.matrix[j][i] -= q * cm.matrix[i][i]
