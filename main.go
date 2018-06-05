@@ -1,8 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"math/rand"
+	"os"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -14,15 +18,20 @@ type calcMatrix struct {
 	factor []float64
 }
 
-func (cm *calcMatrix) allRandInit(n int) {
+func (cm *calcMatrix) fillSlice(n int) {
 	cm.size = n
-	var wg sync.WaitGroup
-
 	for i := 0; i < n; i++ {
-		r := make([]float64, cm.size)
+		r := make([]float64, n)
 		cm.matrix = append(cm.matrix, r)
 	}
-	cm.factor = make([]float64, cm.size)
+	cm.factor = make([]float64, n)
+
+}
+
+func (cm *calcMatrix) AllRandInit(n int) {
+	var wg sync.WaitGroup
+
+	cm.fillSlice(n)
 
 	for i := 0; i < n; i++ {
 		wg.Add(1)
@@ -67,7 +76,7 @@ func (cm *calcMatrix) Print() {
 	}
 }
 
-func (cm *calcMatrix) solveMatrix() {
+func (cm *calcMatrix) SolveMatrix() {
 
 	cm.solveForward()
 	cm.solveBackward()
@@ -107,15 +116,51 @@ func (cm *calcMatrix) solveDivide() {
 	}
 }
 
+func (cm *calcMatrix) ReadFileInit(n int, f *os.File) {
+	cm.fillSlice(n)
+	scanner := bufio.NewScanner(f)
+	for i := 0; i < n; i++ {
+		if !scanner.Scan() {
+			return
+		}
+		spl := strings.Fields(scanner.Text())
+		for j := 0; j <= n; j++ {
+			floats, _ := strconv.ParseFloat(spl[j], 64)
+			if j == n {
+				cm.factor[i] = floats
+				continue
+			}
+			cm.matrix[i][j] = floats
+		}
+	}
+}
+
 func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
 func main() {
 	mat := &calcMatrix{}
-	mat.allRandInit(5)
+	N := 3
+	if len(os.Args) > 1 {
+		if n, err := strconv.Atoi(os.Args[1]); err == nil {
+			N = n
+		}
+	}
+	if len(os.Args) > 2 {
+		file, err := os.Open(os.Args[2])
+		if err != nil {
+			panic(err)
+		}
+		defer file.Close()
 
-	mat.solveMatrix()
+		mat.ReadFileInit(N, file)
+	} else {
+		mat.AllRandInit(N)
+	}
+	mat.Print()
+
+	mat.SolveMatrix()
 
 	mat.Print()
 }
